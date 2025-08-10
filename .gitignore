@@ -13,6 +13,7 @@ yarn-error.log*
 
 # Credentials
 credentials.json
+temp-credentials.json
 *.key
 *.pem
 *.cert
