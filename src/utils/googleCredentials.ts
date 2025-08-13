@@ -3,7 +3,7 @@ import path from 'path';
 
 export function setupGoogleCredentials(): void {
   // Check if credentials are provided via environment variable (for production)
-  const credentialsJson = process.env.GOOGLE_CREDENTIALS_JSON;
+  const credentialsJson = process.env.GOOGLE_CREDENTIALS || process.env.GOOGLE_CREDENTIALS_JSON;
   
   if (credentialsJson) {
     // Write credentials to a temporary file

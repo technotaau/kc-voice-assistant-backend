@@ -12,16 +12,22 @@ export class AIService {
   async generateResponse(
     query: string, 
     mode: 'syllabus' | 'courses',
-    context?: string
+    knowledgeContext?: string
   ): Promise<string> {
     const systemPrompt = this.getSystemPrompt(mode);
+    
+    // Prepare the user message with knowledge context if available
+    let userMessage = query;
+    if (knowledgeContext && knowledgeContext.trim()) {
+      userMessage = `${knowledgeContext}\n\nUser Question: ${query}`;
+    }
     
     try {
       const completion = await this.openai.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: query }
+          { role: "user", content: userMessage }
         ],
         temperature: 0.7,
         max_tokens: 500,
@@ -36,6 +42,8 @@ export class AIService {
 
   private getSystemPrompt(mode: 'syllabus' | 'courses'): string {
     const basePrompt = `You are Kamlesh Chandra, an expert educator specializing in memory techniques and CBSE curriculum.
+
+When relevant information from the knowledge base is provided, use it to give accurate and detailed responses.
 
 IMPORTANT HINGLISH INSTRUCTIONS:
 - Mix Hindi and English naturally

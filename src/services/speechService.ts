@@ -9,6 +9,8 @@ export class SpeechService {
   }
 
   async transcribeAudio(audioBuffer: Buffer): Promise<string> {
+    console.log('Audio buffer size:', audioBuffer.length);
+    
     const request = {
       audio: {
         content: audioBuffer.toString('base64'),
@@ -25,12 +27,21 @@ export class SpeechService {
     };
 
     try {
+      console.log('Sending request to Google Speech API...');
       const [response] = await this.client.recognize(request);
+      console.log('Google Speech API response:', JSON.stringify(response.results, null, 2));
+      
       const transcription = response.results
-        ?.map((result: any) => result.alternatives?.[0].transcript)
+        ?.map((result: any) => result.alternatives?.[0]?.transcript)
+        .filter(Boolean)
         .join(' ') || '';
       
-      console.log('Transcribed:', transcription);
+      console.log('Final transcription:', transcription);
+      
+      if (!transcription.trim()) {
+        console.warn('Empty transcription received - possible audio format issue');
+      }
+      
       return transcription;
     } catch (error) {
       console.error('STT Error:', error);
