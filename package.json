@@ -2,14 +2,15 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "start:dev": "ts-node src/server.ts",
-    "load-knowledge": "ts-node scripts/loadKnowledge.ts"
+    "load-knowledge": "ts-node scripts/loadKnowledge.ts",
+    "postinstall": "npm run build"
   },
   "keywords": [],
   "author": "",
@@ -31,7 +32,8 @@
     "langchain": "^0.3.30",
     "multer": "^2.0.2",
     "openai": "^5.12.2",
-    "pdf-parse": "^1.1.1"
+    "pdf-parse": "^1.1.1",
+    "typescript": "^5.9.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
@@ -39,7 +41,6 @@
     "@types/node": "^24.2.1",
     "@types/pdf-parse": "^1.1.5",
     "nodemon": "^3.1.10",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.2"
+    "ts-node": "^10.9.2"
   }
 }
