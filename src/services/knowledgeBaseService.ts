@@ -96,39 +96,70 @@ class KnowledgeBaseService {
         return;
       }
 
-      // Load all PDF and text files from the directory
-      const files = fs.readdirSync(documentsPath);
-      
-      for (const file of files) {
-        const filePath = path.join(documentsPath, file);
-        const ext = path.extname(file).toLowerCase();
+      // Recursively find all files from directory and subdirectories
+      const findFiles = (dirPath: string, mode?: string): Array<{path: string, name: string, mode: string}> => {
+        const files: Array<{path: string, name: string, mode: string}> = [];
+        const items = fs.readdirSync(dirPath);
         
+        for (const item of items) {
+          const itemPath = path.join(dirPath, item);
+          const stat = fs.statSync(itemPath);
+          
+          if (stat.isDirectory()) {
+            // Recursively find files in subdirectory
+            const folderMode = item; // cbse, kc-courses, etc.
+            files.push(...findFiles(itemPath, folderMode));
+          } else {
+            const ext = path.extname(item).toLowerCase();
+            if (ext === '.pdf' || ext === '.txt' || ext === '.md') {
+              files.push({
+                path: itemPath,
+                name: item,
+                mode: mode || 'general'
+              });
+            }
+          }
+        }
+        return files;
+      };
+
+      // Find all files first
+      const allFiles = findFiles(documentsPath);
+      
+      // Process each file
+      for (const fileInfo of allFiles) {
+        const ext = path.extname(fileInfo.name).toLowerCase();
         let content = '';
         let docType = '';
         
-        if (ext === '.pdf') {
-          const dataBuffer = fs.readFileSync(filePath);
-          const pdfData = await pdfParse(dataBuffer);
-          content = pdfData.text;
-          docType = 'pdf';
-        } else if (ext === '.txt' || ext === '.md') {
-          content = fs.readFileSync(filePath, 'utf-8');
-          docType = 'text';
-        } else {
-          continue;
-        }
-        
-        // Create document with metadata
-        const doc = new Document({
-          pageContent: content,
-          metadata: {
-            source: file,
-            type: docType,
-            path: filePath
+        try {
+          if (ext === '.pdf') {
+            const dataBuffer = fs.readFileSync(fileInfo.path);
+            const pdfData = await pdfParse(dataBuffer);
+            content = pdfData.text;
+            docType = 'pdf';
+          } else if (ext === '.txt' || ext === '.md') {
+            content = fs.readFileSync(fileInfo.path, 'utf-8');
+            docType = 'text';
           }
-        });
-        
-        documents.push(doc);
+          
+          // Create document with metadata including mode
+          const doc = new Document({
+            pageContent: content,
+            metadata: {
+              source: fileInfo.name,
+              type: docType,
+              path: fileInfo.path,
+              mode: fileInfo.mode,
+              folder: fileInfo.mode
+            }
+          });
+          
+          documents.push(doc);
+          console.log(`Loaded: ${fileInfo.name} from ${fileInfo.mode} folder`);
+        } catch (error) {
+          console.error(`Error loading file ${fileInfo.name}:`, error);
+        }
       }
 
       if (documents.length === 0) {
